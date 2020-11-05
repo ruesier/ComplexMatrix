@@ -8,6 +8,22 @@ type M interface {
 	Add(m M) M
 	Transpose() M
 	Dot(m M) M // A.Dot(B) => AB, B.Dot(A) => BA
+	// Map(f func(v complex128, r int, c int) complex128) M
+}
+
+func Equal(a M, b M) bool {
+	R, C := a.Dim()
+	if bR, bC := b.Dim(); R != bR || C != bC {
+		return false
+	}
+	for i := 0; i < R; i++ {
+		for j := 0; j < C; j++ {
+			if a.Get(i, j) != b.Get(i, j) {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // TODO: loose and strict implementations of M
