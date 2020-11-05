@@ -9,6 +9,7 @@ type M interface {
 	Transpose() M
 	Dot(m M) M // A.Dot(B) => AB, B.Dot(A) => BA
 	// Map(f func(v complex128, r int, c int) complex128) M
+	// Resize(R int, C int) M
 }
 
 func Equal(a M, b M) bool {
@@ -37,12 +38,21 @@ type immutable struct {
 func NewImmutable(table [][]complex128) M {
 	n := new(immutable)
 	n.R = len(table)
+	if n.R < 1 {
+		return &immutable{
+			R: 0,
+			C: 0,
+		}
+	}
 	n.Data = make([][]*complex128, n.R)
 	n.C = len(table[0])
+	if n.C < 1 {
+		return n
+	}
 	for i := range n.Data {
 		n.Data[i] = make([]*complex128, n.C)
 		if len(table[i]) != n.C {
-			panic("Maxtrix should be rectangular")
+			panic("Matrix should be rectangular")
 		}
 		for j := range n.Data[i] {
 			n.Data[i][j] = &table[i][j]
@@ -52,12 +62,18 @@ func NewImmutable(table [][]complex128) M {
 }
 
 func (m *immutable) copy() *immutable {
+	if m == nil {
+		return nil
+	}
 	n := new(immutable)
 	*n = *m
 	return n
 }
 
 func (m *immutable) Dim() (int, int) {
+	if m == nil {
+		return 0, 0
+	}
 	return m.R, m.C
 }
 
