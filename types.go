@@ -65,8 +65,12 @@ func (m *immutable) copy() *immutable {
 	if m == nil {
 		return nil
 	}
-	n := new(immutable)
-	*n = *m
+	n := &immutable{
+		R:    m.R,
+		C:    m.C,
+		Data: make([][]*complex128, len(m.Data)),
+	}
+	copy(n.Data, m.Data)
 	return n
 }
 

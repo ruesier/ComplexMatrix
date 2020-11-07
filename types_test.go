@@ -67,8 +67,15 @@ func TestImmutable(t *testing.T) {
 	if !Equal(a, a.(*immutable).copy()) {
 		t.Errorf("copy failed to create replica")
 	}
-  b := a.Set(complex(5, 5), 0, 0)
-  if b.Get(0, 0) != complex(5, 5) {
-    t.Errorf("Set failed to update")
-  }
+	t.Logf("a = %v", a)
+	b := a.Set(complex(5, 5), 0, 0)
+	if b.Get(0, 0) != complex(5, 5) {
+		t.Logf("b = %v", b)
+		t.Errorf("Set failed to update")
+	}
+	if a.Get(0, 0) == complex(5, 5) {
+		t.Logf("a = %v", a)
+		t.Errorf("Set altered original")
+	}
+
 }
