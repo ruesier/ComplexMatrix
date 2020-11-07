@@ -43,3 +43,13 @@ func (t transpose) Dot(m M) M {
 		return dot(t, m, &immutable{})
 	}
 }
+
+func (t transpose) Map(f func(v complex128, r int, c int) complex128) M {
+	return t.wrap.Map(func(v complex128, r int, c int) complex128{
+		return f(v, c, r)
+	}).Transpose()
+}
+
+func (t transpose) Resize(R int, C int) M {
+	return t.wrap.Resize(C, R).Transpose()
+}

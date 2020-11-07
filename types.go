@@ -8,8 +8,8 @@ type M interface {
 	Add(m M) M
 	Transpose() M
 	Dot(m M) M // A.Dot(B) => AB, B.Dot(A) => BA
-	// Map(f func(v complex128, r int, c int) complex128) M
-	// Resize(R int, C int) M
+	Map(f func(v complex128, r int, c int) complex128) M
+	Resize(R int, C int) M
 }
 
 func Equal(a M, b M) bool {
@@ -82,6 +82,9 @@ func (m *immutable) Dim() (int, int) {
 }
 
 func (m *immutable) Get(i int, j int) complex128 {
+	if m.Data[i][j] == nil {
+		return 0
+	}
 	return *(m.Data[i][j])
 }
 
@@ -102,7 +105,7 @@ func (m *immutable) Scale(v complex128) M {
 		n.Data[i] = make([]*complex128, n.C)
 		for j := range n.Data[i] {
 			c := new(complex128)
-			*c = *m.Data[i][j] * v
+			*c = m.Get(i, j) * v
 			n.Data[i][j] = c
 		}
 	}
@@ -124,7 +127,7 @@ func (m *immutable) Add(o M) M {
 		n.Data[i] = make([]*complex128, n.C)
 		for j := range n.Data[i] {
 			c := new(complex128)
-			*c = *m.Data[i][j] + o.Get(i, j)
+			*c = m.Get(i, j) + o.Get(i, j)
 			n.Data[i][j] = c
 		}
 	}
@@ -143,4 +146,44 @@ func (m *immutable) Dot(B M) M {
 
 func (m *immutable) Build(d [][]complex128) M {
 	return NewImmutable(d)
+}
+
+func (m *immutable) String() string {
+	return SprintCustom(m, "[", "], ", ", ")
+}
+
+func (m *immutable) Map(f func(v complex128, r int, c int) complex128) M {
+	n := &immutable{
+		R:    m.R,
+		C:    m.C,
+		Data: make([][]*complex128, m.R),
+	}
+	for i := range n.Data {
+		n.Data[i] = make([]*complex128, m.C)
+		for j := range n.Data[i] {
+			temp := new(complex128)
+			*temp = f(m.Get(i, j), i, j)
+			n.Data[i][j] = temp
+		}
+	}
+	return n
+}
+
+func (m *immutable) Resize(R int, C int) M {
+	n := &immutable{
+		R:    R,
+		C:    C,
+		Data: make([][]*complex128, R),
+	}
+	for i := range n.Data {
+		n.Data[i] = make([]*complex128, C)
+		for j := range n.Data[i] {
+			if i >= m.R || j >= m.C {
+				n.Data[i][j] = nil
+			} else {
+				n.Data[i][j] = m.Data[i][j]
+			}
+		}
+	}
+	return n
 }
