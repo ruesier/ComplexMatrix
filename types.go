@@ -1,5 +1,7 @@
 package complexMatrix
 
+import "fmt"
+
 type M interface {
 	Dim() (r int, c int)
 	Get(r int, c int) complex128
@@ -27,161 +29,125 @@ func Equal(a M, b M) bool {
 	return true
 }
 
-// TODO: loose and strict implementations of M
-
-type immutable struct {
-	R    int
-	C    int
-	Data [][]*complex128
-}
+type immutable [][]complex128
 
 func NewImmutable(table [][]complex128) M {
-	n := new(immutable)
-	n.R = len(table)
-	if n.R < 1 {
-		return &immutable{
-			R: 0,
-			C: 0,
+	n := make(immutable, len(table))
+	columnChecker := len(table[0])
+	for i := range n {
+		if columnChecker != len(table[i]) {
+			panic("complexMatrix.NewImmutable parameter error: columns are of different lengths")
 		}
-	}
-	n.Data = make([][]*complex128, n.R)
-	n.C = len(table[0])
-	if n.C < 1 {
-		return n
-	}
-	for i := range n.Data {
-		n.Data[i] = make([]*complex128, n.C)
-		if len(table[i]) != n.C {
-			panic("Matrix should be rectangular")
-		}
-		for j := range n.Data[i] {
-			n.Data[i][j] = &table[i][j]
+		n[i] = make([]complex128, columnChecker)
+		for j := range n[i] {
+			n[i][j] = table[i][j]
 		}
 	}
 	return n
 }
 
-func (m *immutable) copy() *immutable {
+func (m immutable) copy() immutable {
 	if m == nil {
 		return nil
 	}
-	n := &immutable{
-		R:    m.R,
-		C:    m.C,
-		Data: make([][]*complex128, len(m.Data)),
-	}
-	copy(n.Data, m.Data)
+	n := make(immutable, len(m))
+	copy(n, m)
 	return n
 }
 
-func (m *immutable) Dim() (int, int) {
-	if m == nil {
+func (m immutable) Dim() (int, int) {
+	if m == nil || len(m) == 0 {
 		return 0, 0
 	}
-	return m.R, m.C
+	return len(m), len(m[0])
 }
 
-func (m *immutable) Get(i int, j int) complex128 {
-	if m.Data[i][j] == nil {
+func (m immutable) Get(i int, j int) complex128 {
+	if m == nil {
 		return 0
 	}
-	return *(m.Data[i][j])
+	return m[i][j]
 }
 
-func (m *immutable) Set(c complex128, i int, j int) M {
+func (m immutable) Set(c complex128, i int, j int) M {
+	if R, C := m.Dim(); i < 0 || i >= R || j < 0 || j >= C {
+		panic(fmt.Sprintf("complexMatrix.immutable.Set parameter error: i (%d) or j(%d) is out of bounds (%d, %d)", i, j, R, C))
+	}
 	n := m.copy()
-	n.Data[i] = make([]*complex128, m.C)
-	copy(n.Data[i], m.Data[i])
-	n.Data[i][j] = &c
+	n[i] = make([]complex128, len(m[0]))
+	copy(n[i], m[i])
+	n[i][j] = c
 	return n
 }
 
-func (m *immutable) Scale(v complex128) M {
-	n := new(immutable)
-	n.R = m.R
-	n.C = m.C
-	n.Data = make([][]*complex128, n.R)
-	for i := range n.Data {
-		n.Data[i] = make([]*complex128, n.C)
-		for j := range n.Data[i] {
-			c := new(complex128)
-			*c = m.Get(i, j) * v
-			n.Data[i][j] = c
+func (m immutable) Scale(v complex128) M {
+	n := make(immutable, len(m))
+	for i := range n {
+		n[i] = make([]complex128, len(m[0]))
+		for j := range n[i] {
+			n[i][j] = m[i][j] * v
 		}
 	}
 	return n
 }
 
-func (m *immutable) Add(o M) M {
+func (m immutable) Add(o M) M {
 	{
+		mR, mC := m.Dim()
 		oR, oC := o.Dim()
-		if m.R != oR || m.C != oC {
+		if mR != oR || mC != oC {
 			panic("dimesion mismatch, can only add matricies of the same dimentions")
 		}
 	}
-	n := new(immutable)
-	n.R = m.R
-	n.C = m.C
-	n.Data = make([][]*complex128, n.R)
-	for i := range n.Data {
-		n.Data[i] = make([]*complex128, n.C)
-		for j := range n.Data[i] {
-			c := new(complex128)
-			*c = m.Get(i, j) + o.Get(i, j)
-			n.Data[i][j] = c
+	n := make(immutable, len(m))
+	for i := range n {
+		n[i] = make([]complex128, len(m[0]))
+		for j := range n[i] {
+			n[i][j] = m.Get(i, j) + o.Get(i, j)
 		}
 	}
 	return n
 }
 
-func (m *immutable) Transpose() M {
+func (m immutable) Transpose() M {
 	return transpose{
 		wrap: m.copy(),
 	}
 }
 
-func (m *immutable) Dot(B M) M {
+func (m immutable) Dot(B M) M {
 	return dot(m, B, m)
 }
 
-func (m *immutable) Build(d [][]complex128) M {
+func (m immutable) Build(d [][]complex128) M {
 	return NewImmutable(d)
 }
 
-func (m *immutable) String() string {
+func (m immutable) String() string {
 	return SprintCustom(m, "[", "], ", ", ")
 }
 
-func (m *immutable) Map(f func(v complex128, r int, c int) complex128) M {
-	n := &immutable{
-		R:    m.R,
-		C:    m.C,
-		Data: make([][]*complex128, m.R),
-	}
-	for i := range n.Data {
-		n.Data[i] = make([]*complex128, m.C)
-		for j := range n.Data[i] {
-			temp := new(complex128)
-			*temp = f(m.Get(i, j), i, j)
-			n.Data[i][j] = temp
+func (m immutable) Map(f func(v complex128, r int, c int) complex128) M {
+	n := make(immutable, len(m))
+	for i := range n {
+		n[i] = make([]complex128, len(m[0]))
+		for j := range n[i] {
+			n[i][j] = f(m.Get(i, j), i, j)
 		}
 	}
 	return n
 }
 
-func (m *immutable) Resize(R int, C int) M {
-	n := &immutable{
-		R:    R,
-		C:    C,
-		Data: make([][]*complex128, R),
-	}
-	for i := range n.Data {
-		n.Data[i] = make([]*complex128, C)
-		for j := range n.Data[i] {
-			if i >= m.R || j >= m.C {
-				n.Data[i][j] = nil
+func (m immutable) Resize(R int, C int) M {
+	n := make(immutable, R)
+	mR, mC := m.Dim()
+	for i := range n {
+		n[i] = make([]complex128, C)
+		for j := range n[i] {
+			if i >= mR || j >= mC {
+				n[i][j] = 0
 			} else {
-				n.Data[i][j] = m.Data[i][j]
+				n[i][j] = m[i][j]
 			}
 		}
 	}

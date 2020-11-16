@@ -3,43 +3,25 @@ package complexMatrix
 import "testing"
 
 func TestEqual(t *testing.T) {
-	vals := make([]*complex128, 0, 10)
-	for v := float64(1.0); v <= 10.0; v++ {
-		temp := new(complex128)
-		*temp = complex(v, v)
-		vals = append(vals, temp)
-	}
-	a := &immutable{
-		R: 2,
-		C: 2,
-		Data: [][]*complex128{
-			[]*complex128{vals[0], vals[1]},
-			[]*complex128{vals[2], vals[3]},
-		},
-	}
+	a := immutable([][]complex128{
+		[]complex128{1 + 1i, 2 + 2i},
+		[]complex128{3 + 3i, 4 + 4i},
+	})
 	if !Equal(a, a) {
 		t.Errorf("reflexive equality check failed")
 	}
-	b := &immutable{
-		R: 3,
-		C: 1,
-		Data: [][]*complex128{
-			[]*complex128{vals[4]},
-			[]*complex128{vals[5]},
-			[]*complex128{vals[6]},
-		},
-	}
+	b := immutable([][]complex128{
+		[]complex128{5 + 5i},
+		[]complex128{6 + 6i},
+		[]complex128{7 + 7i},
+	})
 	if Equal(a, b) {
 		t.Errorf("Failed to distinguish difference in dimensions")
 	}
-	c := &immutable{
-		R: 2,
-		C: 2,
-		Data: [][]*complex128{
-			[]*complex128{vals[7], vals[8]},
-			[]*complex128{vals[9], vals[0]},
-		},
-	}
+	c := immutable([][]complex128{
+		[]complex128{8 + 8i, 9 + 9i},
+		[]complex128{10 + 10i, 1 + 1i},
+	})
 	if Equal(a, c) {
 		t.Errorf("Failed to check values")
 	}
@@ -64,10 +46,9 @@ func TestImmutable(t *testing.T) {
 			[]complex128{complex(3, 3)},
 		})
 	})
-	if !Equal(a, a.(*immutable).copy()) {
+	if !Equal(a, a.(immutable).copy()) {
 		t.Errorf("copy failed to create replica")
 	}
-	t.Logf("a = %v", a)
 	b := a.Set(complex(5, 5), 0, 0)
 	if b.Get(0, 0) != complex(5, 5) {
 		t.Logf("b = %v", b)
@@ -98,7 +79,7 @@ func TestImmutable(t *testing.T) {
 	if e.Get(0, 0) != a.Get(0, 0) || e.Get(0, 1) != a.Get(1, 0) {
 		t.Errorf("Transpose incorrect, e = %v", e)
 	}
-	f := a.(*immutable).Build([][]complex128{
+	f := a.(immutable).Build([][]complex128{
 		[]complex128{complex(1, 0)},
 		[]complex128{complex(0, 1)},
 	})
