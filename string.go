@@ -5,11 +5,11 @@ import (
 	"strings"
 )
 
-func Sprint(m M) string {
-	return SprintCustom(m, "\n\t[", "], ", ", ")
+func SPrintLines(m M) string {
+	return SPrintCustom(m, "[", "],\n", ", ")
 }
 
-func SprintCustom(m M, newRow string, endRow string, colSpace string) string {
+func SPrintCustom(m M, newRow string, endRow string, colSpace string) string {
 	R, C := m.Dim()
 	sb := new(strings.Builder)
 	for i := 0; i < R; i++ {

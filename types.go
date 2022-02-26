@@ -12,6 +12,34 @@ type M interface {
 	Dot(m M) M // A.Dot(B) => AB, B.Dot(A) => BA
 	Map(f func(v complex128, r int, c int) complex128) M
 	Resize(R int, C int) M
+	Immutable() M
+	Mutable() M
+}
+
+func Real(m M) [][]float64 {
+	R, C := m.Dim()
+	n := make([][]float64, 0, R)
+	for i := 0; i < R; i++ {
+		nrow := make([]float64, 0, C)
+		for j := 0; j < C; j++ {
+			nrow = append(nrow, real(m.Get(i, j)))
+		}
+		n = append(n, nrow)
+	}
+	return n
+}
+
+func Imag(m M) [][]float64 {
+	R, C := m.Dim()
+	n := make([][]float64, 0, R)
+	for i := 0; i < R; i++ {
+		nrow := make([]float64, 0, C)
+		for j := 0; j < C; j++ {
+			nrow = append(nrow, imag(m.Get(i, j)))
+		}
+		n = append(n, nrow)
+	}
+	return n
 }
 
 func Equal(a M, b M) bool {
@@ -36,7 +64,7 @@ func NewImmutable(table [][]complex128) M {
 	columnChecker := len(table[0])
 	for i := range n {
 		if columnChecker != len(table[i]) {
-			panic("complexMatrix.NewImmutable parameter error: columns are of different lengths")
+			panic("complexMatrix.NewImmutable parameter error: values are not in rectangular shape")
 		}
 		n[i] = make([]complex128, columnChecker)
 		for j := range n[i] {
@@ -44,6 +72,26 @@ func NewImmutable(table [][]complex128) M {
 		}
 	}
 	return n
+}
+
+func combine(r [][]float64, im [][]float64) [][]complex128 {
+	R, C := len(r), len(r[0])
+	if iR, iC := len(im), len(im[0]); R != iR || C != iC {
+		panic("attempting to combine real and imaginary matrixes of different dimensions")
+	}
+	n := make([][]complex128, 0, R)
+	for i := 0; i < R; i++ {
+		nrow := make([]complex128, 0, C)
+		for j := 0; j < C; j++ {
+			nrow = append(nrow, complex(r[i][j], im[i][j]))
+		}
+		n = append(n, nrow)
+	}
+	return n
+}
+
+func CombineIntoImmutable(real [][]float64, imag [][]float64) M {
+	return NewImmutable(combine(real, imag))
 }
 
 func (m immutable) copy() immutable {
@@ -124,7 +172,7 @@ func (m immutable) Build(d [][]complex128) M {
 }
 
 func (m immutable) String() string {
-	return SprintCustom(m, "[", "], ", ", ")
+	return SPrintCustom(m, "[", "], ", ", ")
 }
 
 func (m immutable) Map(f func(v complex128, r int, c int) complex128) M {
@@ -152,4 +200,12 @@ func (m immutable) Resize(R int, C int) M {
 		}
 	}
 	return n
+}
+
+func (m immutable) Immutable() M {
+	return m
+}
+
+func (m immutable) Mutable() M {
+	return NewMutable(m)
 }

@@ -45,11 +45,23 @@ func (t transpose) Dot(m M) M {
 }
 
 func (t transpose) Map(f func(v complex128, r int, c int) complex128) M {
-	return t.wrap.Map(func(v complex128, r int, c int) complex128{
+	return t.wrap.Map(func(v complex128, r int, c int) complex128 {
 		return f(v, c, r)
 	}).Transpose()
 }
 
 func (t transpose) Resize(R int, C int) M {
 	return t.wrap.Resize(C, R).Transpose()
+}
+
+func (t transpose) String() string {
+	return SPrintCustom(t, "[", "], ", ", ")
+}
+
+func (t transpose) Immutable() M {
+	return t.wrap.Immutable().Transpose()
+}
+
+func (t transpose) Mutable() M {
+	return t.wrap.Mutable().Transpose()
 }

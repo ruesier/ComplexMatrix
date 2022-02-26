@@ -4,23 +4,23 @@ import "testing"
 
 func TestEqual(t *testing.T) {
 	a := immutable([][]complex128{
-		[]complex128{1 + 1i, 2 + 2i},
-		[]complex128{3 + 3i, 4 + 4i},
+		{1 + 1i, 2 + 2i},
+		{3 + 3i, 4 + 4i},
 	})
 	if !Equal(a, a) {
 		t.Errorf("reflexive equality check failed")
 	}
 	b := immutable([][]complex128{
-		[]complex128{5 + 5i},
-		[]complex128{6 + 6i},
-		[]complex128{7 + 7i},
+		{5 + 5i},
+		{6 + 6i},
+		{7 + 7i},
 	})
 	if Equal(a, b) {
 		t.Errorf("Failed to distinguish difference in dimensions")
 	}
 	c := immutable([][]complex128{
-		[]complex128{8 + 8i, 9 + 9i},
-		[]complex128{10 + 10i, 1 + 1i},
+		{8 + 8i, 9 + 9i},
+		{10 + 10i, 1 + 1i},
 	})
 	if Equal(a, c) {
 		t.Errorf("Failed to check values")
@@ -29,8 +29,8 @@ func TestEqual(t *testing.T) {
 
 func TestImmutable(t *testing.T) {
 	a := NewImmutable([][]complex128{
-		[]complex128{complex(1, 1), complex(2, 2)},
-		[]complex128{complex(3, 3), complex(4, 4)},
+		{complex(1, 1), complex(2, 2)},
+		{complex(3, 3), complex(4, 4)},
 	})
 	if !Equal(a, a) || a.Get(0, 1) != complex(2, 2) {
 		t.Errorf("Incorrect immutable construction")
@@ -42,8 +42,8 @@ func TestImmutable(t *testing.T) {
 			}
 		}()
 		NewImmutable([][]complex128{
-			[]complex128{complex(1, 1), complex(2, 2)},
-			[]complex128{complex(3, 3)},
+			{complex(1, 1), complex(2, 2)},
+			{complex(3, 3)},
 		})
 	})
 	if !Equal(a, a.(immutable).copy()) {
@@ -80,8 +80,8 @@ func TestImmutable(t *testing.T) {
 		t.Errorf("Transpose incorrect, e = %v", e)
 	}
 	f := a.(immutable).Build([][]complex128{
-		[]complex128{complex(1, 0)},
-		[]complex128{complex(0, 1)},
+		{complex(1, 0)},
+		{complex(0, 1)},
 	})
 	if a.Get(0, 0) != complex(1, 1) {
 		t.Errorf("Build altered original, a = %v", a)
@@ -96,4 +96,8 @@ func TestImmutable(t *testing.T) {
 	if gR, gC := g.Dim(); gR != 2 || gC != 1 || g.Get(0, 0) != complex(-1, 3) {
 		t.Errorf("Dot incorrect result, g = %v", g)
 	}
+}
+
+func TestMutable(t *testing.T) {
+
 }
