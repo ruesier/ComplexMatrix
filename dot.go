@@ -1,16 +1,16 @@
 package complexMatrix
 
-// Builder represents objects that can construct complexMatrix.M
-// many types that implement M also implement Builder so that a new instance
+// Builder represents objects that can construct complexMatrix.M.
+// Many types that implement M also implement Builder, so that a new instance
 // of an M can be created using the same underlying type without cumbersome
 // type checking
-type Builder interface {
+type builder interface {
 	Build([][]complex128) M
 }
 
 // dot implementation of matrix dot product, helper function for Dot methods
 // TODO: currently implemented with naive solution, want to update with faster algorithm
-func dot(A M, B M, b Builder) M {
+func dot(A M, B M, b builder) M {
 	targetR, L := A.Dim()
 	B_L, targetC := B.Dim()
 	if L != B_L {

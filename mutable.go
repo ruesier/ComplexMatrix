@@ -2,6 +2,7 @@ package complexMatrix
 
 type mutable [][]complex128
 
+// Creates a mutable matrix from a 2-d array of complex numbers
 func NewMutable(table [][]complex128) M {
 	if len(table) == 0 {
 		return nil
@@ -14,8 +15,19 @@ func NewMutable(table [][]complex128) M {
 	return mutable(table)
 }
 
+// Creates a mutable matrix from 2-d arrays of real and imaginary parts
 func CombineIntoMutable(real [][]float64, imag [][]float64) M {
 	return NewMutable(combine(real, imag))
+}
+
+// Returns an mutable matrix with given dimensions filled with zero values
+func EmptyMutable(height int, width int) M {
+	n := make(mutable, 0, height)
+	for len(n) < height {
+		row := make([]complex128, width)
+		n = append(n, row)
+	}
+	return n
 }
 
 func (m mutable) copy() mutable {
@@ -103,7 +115,7 @@ func (m mutable) Map(f func(v complex128, r int, c int) complex128) M {
 }
 
 func (m mutable) Resize(R int, C int) M {
-	n := make(immutable, R)
+	n := make(mutable, R)
 	mR, mC := m.Dim()
 	for i := range n {
 		n[i] = make([]complex128, C)

@@ -5,10 +5,12 @@ import (
 	"strings"
 )
 
+// Generates multiline string representation of matrix
 func SPrintLines(m M) string {
 	return SPrintCustom(m, "[", "],\n", ", ")
 }
 
+// Generates string representation of matrix. Uses provided element separators.
 func SPrintCustom(m M, newRow string, endRow string, colSpace string) string {
 	R, C := m.Dim()
 	sb := new(strings.Builder)

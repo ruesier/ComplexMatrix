@@ -1,0 +1,96 @@
+package complexMatrix // import "github.com/ruesier/complexMatrix"
+
+complexMatrix is a golang package the implements Matrix types with elements
+of complex numbers
+
+Copyright 2022 Devon Call
+
+FUNCTIONS
+
+func Equal(a M, b M) bool
+    Two matricies are equal if they have the same dimensions and posistion has
+    the same values
+
+func Imag(m M) [][]float64
+    Imag returns a 2-d array of the imaginary parts of a matrix
+
+func Real(m M) [][]float64
+    Real returns a 2-d array of the real parts of a matrix
+
+func SPrintCustom(m M, newRow string, endRow string, colSpace string) string
+    Generates string representation of matrix. Uses provided element separators.
+
+func SPrintLines(m M) string
+    Generates multiline string representation of matrix
+
+
+TYPES
+
+type M interface {
+
+	// Returns the dimensions of the matrix, height then width.
+	Dim() (rows int, columns int)
+
+	// Get the value at a particular row and column.
+	Get(row int, column int) complex128
+
+	/* Sets the value at a particular row and column, returns the updated matrix.
+	Immutable matricies return a new matrix instance with the updated value.
+	Mutable matricies return themselves after updating the value.
+	*/
+	Set(value complex128, row int, column int) M
+
+	// Updates each value in the matrix by multiplying by the parameter.
+	// Immutable matricies return a new matrix instance with updated values.
+	// Mutable matricies return themselves after updating the values.
+	Scale(c complex128) M
+
+	// Returns matrix by adding elements together of each matrix. Both matricies must have the same dimensions.
+	// For A.Add(B):
+	// If A is immutable it returns a new matrix.
+	// If A is mutable, A is updated and A is returned
+	Add(matrix M) M
+
+	// Returns a transposed matrix.
+	// Immutable matricies return a matrix that is also immutable.
+	// Mutable matricies are used as the underlying matrix, meaning that modifications will alter the original matrix.
+	// for example, A.Transpose().Set(0, 1, 2) will have the same effect for A.Set(0, 2, 1)
+	Transpose() M
+
+	// Matrix Dot Multiplication
+	// A.Dot(B) => AB, B.Dot(A) => BA
+	// Both immutable and mutable matricies produce new matricies, because the dimensions are not garunteed to stay constant.
+	Dot(matrix M) M
+
+	// Returns an updated matrix with each element being the result of calling the passed in function to each original element.
+	// Mutable matricies will also be updated.
+	Map(f func(v complex128, r int, c int) complex128) M
+
+	// Returns a new matrix with the provided dimensions.
+	// If i, j is within the dimensions of the original matrix, then the new matrix will have the same values at those coordinates.
+	Resize(Rows int, Columns int) M
+
+	// Returns an immutable version of the matrix
+	Immutable() M
+
+	// Returns an mutable version of the matrix
+	Mutable() M
+}
+    M represents a matrix of complex numbers. It comes in immutable and mutable
+    varieties.
+
+func CombineIntoImmutable(real [][]float64, imag [][]float64) M
+    Combines real and imaginary 2-d arrays into an immutable matrix
+
+func CombineIntoMutable(real [][]float64, imag [][]float64) M
+    Creates a mutable matrix from 2-d arrays of real and imaginary parts
+
+func EmptyMutable(height int, width int) M
+    Returns an mutable matrix with given dimensions filled with zero values
+
+func NewImmutable(table [][]complex128) M
+    Constructor for an immutable matrix
+
+func NewMutable(table [][]complex128) M
+    Creates a mutable matrix from a 2-d array of complex numbers
+

@@ -37,7 +37,7 @@ func (t transpose) Transpose() M {
 // A.Dot(B) => AB, B.Dot(A) => BA
 func (t transpose) Dot(m M) M {
 	switch v := t.wrap.(type) {
-	case Builder:
+	case builder:
 		return dot(t, m, v)
 	default:
 		return dot(t, m, &immutable{})
