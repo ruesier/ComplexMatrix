@@ -44,9 +44,9 @@ func (t transpose) Dot(m M) M {
 	}
 }
 
-func (t transpose) Map(f func(v complex128, r int, c int) complex128) M {
-	return t.wrap.Map(func(v complex128, r int, c int) complex128 {
-		return f(v, c, r)
+func (t transpose) Map(f func(val complex128, column int, row int, matrix M) complex128) M {
+	return t.wrap.Map(func(v complex128, c int, r int, m M) complex128 {
+		return f(v, c, r, m)
 	}).Transpose()
 }
 

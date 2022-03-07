@@ -107,10 +107,10 @@ func (m mutable) String() string {
 	return fmt.Sprintf("{%s}", SPrintCustom(m, "{", "}, ", ", "))
 }
 
-func (m mutable) Map(f func(v complex128, r int, c int) complex128) M {
+func (m mutable) Map(f func(v complex128, column int, row int, matrix M) complex128) M {
 	for i, col := range m {
 		for j := range col {
-			m[i][j] = f(m[i][j], i, j)
+			m[i][j] = f(m[i][j], i, j, m)
 		}
 	}
 	return m

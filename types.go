@@ -46,7 +46,7 @@ type M interface {
 
 	// Returns an updated matrix with each element being the result of calling the passed in function to each original element.
 	// Mutable matricies will also be updated.
-	Map(f func(v complex128, r int, c int) complex128) M
+	Map(f func(v complex128, column int, row int, matrix M) complex128) M
 
 	// Returns a new matrix with the provided dimensions.
 	// If i, j is within the dimensions of the original matrix, then the new matrix will have the same values at those coordinates.
@@ -248,12 +248,12 @@ func (m immutable) String() string {
 	return SPrintCustom(m, "[", "], ", ", ")
 }
 
-func (m immutable) Map(f func(v complex128, r int, c int) complex128) M {
+func (m immutable) Map(f func(v complex128, column int, row int, matrix M) complex128) M {
 	n := make(immutable, len(m))
 	for i := range n {
 		n[i] = make([]complex128, len(m[0]))
 		for j := range n[i] {
-			n[i][j] = f(m.Get(i, j), i, j)
+			n[i][j] = f(m[i][j], i, j, m)
 		}
 	}
 	return n
