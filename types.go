@@ -11,16 +11,16 @@ import "fmt"
 type M interface {
 
 	// Returns the dimensions of the matrix, height then width.
-	Dim() (rows int, columns int)
+	Dim() (width int, height int)
 
 	// Get the value at a particular row and column.
-	Get(row int, column int) complex128
+	Get(column int, row int) complex128
 
 	/* Sets the value at a particular row and column, returns the updated matrix.
 	Immutable matricies return a new matrix instance with the updated value.
 	Mutable matricies return themselves after updating the value.
 	*/
-	Set(value complex128, row int, column int) M
+	Set(value complex128, column int, row int) M
 
 	// Updates each value in the matrix by multiplying by the parameter.
 	// Immutable matricies return a new matrix instance with updated values.
@@ -50,7 +50,7 @@ type M interface {
 
 	// Returns a new matrix with the provided dimensions.
 	// If i, j is within the dimensions of the original matrix, then the new matrix will have the same values at those coordinates.
-	Resize(Rows int, Columns int) M
+	Resize(Width int, Height int) M
 
 	// Returns an immutable version of the matrix
 	Immutable() M
@@ -61,11 +61,11 @@ type M interface {
 
 // Real returns a 2-d array of the real parts of a matrix
 func Real(m M) [][]float64 {
-	R, C := m.Dim()
-	n := make([][]float64, 0, R)
-	for i := 0; i < R; i++ {
-		nrow := make([]float64, 0, C)
-		for j := 0; j < C; j++ {
+	W, H := m.Dim()
+	n := make([][]float64, 0, W)
+	for i := 0; i < W; i++ {
+		nrow := make([]float64, 0, H)
+		for j := 0; j < H; j++ {
 			nrow = append(nrow, real(m.Get(i, j)))
 		}
 		n = append(n, nrow)
@@ -75,11 +75,11 @@ func Real(m M) [][]float64 {
 
 // Imag returns a 2-d array of the imaginary parts of a matrix
 func Imag(m M) [][]float64 {
-	R, C := m.Dim()
-	n := make([][]float64, 0, R)
-	for i := 0; i < R; i++ {
-		nrow := make([]float64, 0, C)
-		for j := 0; j < C; j++ {
+	W, H := m.Dim()
+	n := make([][]float64, 0, W)
+	for i := 0; i < W; i++ {
+		nrow := make([]float64, 0, H)
+		for j := 0; j < H; j++ {
 			nrow = append(nrow, imag(m.Get(i, j)))
 		}
 		n = append(n, nrow)
@@ -89,12 +89,12 @@ func Imag(m M) [][]float64 {
 
 // Two matricies are equal if they have the same dimensions and posistion has the same values
 func Equal(a M, b M) bool {
-	R, C := a.Dim()
-	if bR, bC := b.Dim(); R != bR || C != bC {
+	W, H := a.Dim()
+	if bW, bH := b.Dim(); W != bW || H != bH {
 		return false
 	}
-	for i := 0; i < R; i++ {
-		for j := 0; j < C; j++ {
+	for i := 0; i < W; i++ {
+		for j := 0; j < H; j++ {
 			if a.Get(i, j) != b.Get(i, j) {
 				return false
 			}
@@ -122,14 +122,20 @@ func NewImmutable(table [][]complex128) M {
 }
 
 func combine(r [][]float64, im [][]float64) [][]complex128 {
-	R, C := len(r), len(r[0])
-	if iR, iC := len(im), len(im[0]); R != iR || C != iC {
+	W, H := len(r), len(r[0])
+	if iW, iH := len(im), len(im[0]); W != iW || H != iH {
 		panic("attempting to combine real and imaginary matrixes of different dimensions")
 	}
-	n := make([][]complex128, 0, R)
-	for i := 0; i < R; i++ {
-		nrow := make([]complex128, 0, C)
-		for j := 0; j < C; j++ {
+	n := make([][]complex128, 0, W)
+	for i := 0; i < W; i++ {
+		if H != len(r[i]) {
+			panic("real matrix is not a rectangle")
+		}
+		if H != len(im[i]) {
+			panic("imaginary matrix is not a rectangle")
+		}
+		nrow := make([]complex128, 0, H)
+		for j := 0; j < H; j++ {
 			nrow = append(nrow, complex(r[i][j], im[i][j]))
 		}
 		n = append(n, nrow)
@@ -142,6 +148,7 @@ func CombineIntoImmutable(real [][]float64, imag [][]float64) M {
 	return NewImmutable(combine(real, imag))
 }
 
+// builds a new copy of immutable matrix in memory in order to update values in modifing operation.
 func (m immutable) copy() immutable {
 	if m == nil {
 		return nil
@@ -166,8 +173,8 @@ func (m immutable) Get(i int, j int) complex128 {
 }
 
 func (m immutable) Set(c complex128, i int, j int) M {
-	if R, C := m.Dim(); i < 0 || i >= R || j < 0 || j >= C {
-		panic(fmt.Errorf("complexMatrix.immutable.Set parameter error: i (%d) or j(%d) is out of bounds (%d, %d)", i, j, R, C))
+	if W, H := m.Dim(); i < 0 || i >= W || j < 0 || j >= H {
+		panic(fmt.Errorf("complexMatrix.immutable.Set parameter error: i (%d) or j(%d) is out of bounds (%d, %d)", i, j, W, H))
 	}
 	n := m.copy()
 	n[i] = make([]complex128, len(m[0]))
@@ -189,9 +196,9 @@ func (m immutable) Scale(v complex128) M {
 
 func (m immutable) Add(o M) M {
 	{
-		mR, mC := m.Dim()
-		oR, oC := o.Dim()
-		if mR != oR || mC != oC {
+		mH, mW := m.Dim()
+		oH, oW := o.Dim()
+		if mH != oH || mW != oW {
 			panic("dimesion mismatch, can only add matricies of the same dimentions")
 		}
 	}
@@ -234,13 +241,13 @@ func (m immutable) Map(f func(v complex128, r int, c int) complex128) M {
 	return n
 }
 
-func (m immutable) Resize(R int, C int) M {
-	n := make(immutable, R)
-	mR, mC := m.Dim()
+func (m immutable) Resize(W int, H int) M {
+	n := make(immutable, W)
+	mW, mH := m.Dim()
 	for i := range n {
-		n[i] = make([]complex128, C)
+		n[i] = make([]complex128, H)
 		for j := range n[i] {
-			if i >= mR || j >= mC {
+			if i >= mW || j >= mH {
 				n[i][j] = 0
 			} else {
 				n[i][j] = m[i][j]

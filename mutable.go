@@ -1,5 +1,7 @@
 package complexMatrix
 
+import "fmt"
+
 type mutable [][]complex128
 
 // Creates a mutable matrix from a 2-d array of complex numbers
@@ -35,10 +37,10 @@ func (m mutable) copy() mutable {
 		return nil
 	}
 	n := make(mutable, 0, len(m))
-	for _, row := range m {
-		nrow := make([]complex128, len(row))
-		copy(nrow, row)
-		n = append(n, nrow)
+	for _, col := range m {
+		ncol := make([]complex128, len(col))
+		copy(ncol, col)
+		n = append(n, ncol)
 	}
 	return n
 }
@@ -63,8 +65,8 @@ func (m mutable) Set(c complex128, i int, j int) M {
 }
 
 func (m mutable) Scale(v complex128) M {
-	for i, row := range m {
-		for j := range row {
+	for i, col := range m {
+		for j := range col {
 			m[i][j] = m[i][j] * v
 		}
 	}
@@ -73,9 +75,9 @@ func (m mutable) Scale(v complex128) M {
 
 func (m mutable) Add(o M) M {
 	{
-		mR, mC := m.Dim()
-		oR, oC := o.Dim()
-		if mR != oR || mC != oC {
+		mW, mH := m.Dim()
+		oW, oH := o.Dim()
+		if mW != oW || mH != oH {
 			panic("dimesion mismatch, can only add matricies of the same dimentions")
 		}
 	}
@@ -102,25 +104,25 @@ func (m mutable) Build(d [][]complex128) M {
 }
 
 func (m mutable) String() string {
-	return SPrintCustom(m, "(", "), ", ", ")
+	return fmt.Sprintf("{%s}", SPrintCustom(m, "{", "}, ", ", "))
 }
 
 func (m mutable) Map(f func(v complex128, r int, c int) complex128) M {
-	for i, row := range m {
-		for j := range row {
+	for i, col := range m {
+		for j := range col {
 			m[i][j] = f(m[i][j], i, j)
 		}
 	}
 	return m
 }
 
-func (m mutable) Resize(R int, C int) M {
-	n := make(mutable, R)
-	mR, mC := m.Dim()
+func (m mutable) Resize(Width int, Height int) M {
+	n := make(mutable, Width)
+	mW, mH := m.Dim()
 	for i := range n {
-		n[i] = make([]complex128, C)
+		n[i] = make([]complex128, Height)
 		for j := range n[i] {
-			if i >= mR || j >= mC {
+			if i >= mW || j >= mH {
 				n[i][j] = 0
 			} else {
 				n[i][j] = m[i][j]
