@@ -87,6 +87,24 @@ func Imag(m M) [][]float64 {
 	return n
 }
 
+func Parts(m M) ([][]float64, [][]float64) {
+	W, H := m.Dim()
+	num := make([][]float64, 0, W)
+	im := make([][]float64, 0, W)
+	for i := 0; i < W; i++ {
+		ncol_num := make([]float64, 0, H)
+		ncol_imag := make([]float64, 0, H)
+		for j := 0; j < H; j++ {
+			comp := m.Get(i, j)
+			ncol_num = append(ncol_num, real(comp))
+			ncol_imag = append(ncol_imag, imag(comp))
+		}
+		num = append(num, ncol_num)
+		im = append(im, ncol_imag)
+	}
+	return num, im
+}
+
 // Two matricies are equal if they have the same dimensions and posistion has the same values
 func Equal(a M, b M) bool {
 	W, H := a.Dim()
